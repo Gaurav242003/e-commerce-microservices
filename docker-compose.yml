@@ -1,0 +1,30 @@
+version: "0.0"
+services:
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - 3001:3001
+    env_file:
+      - ./services/user-service/.env 
+    environment:
+      - PORT=3001
+    depends_on: []
+    restart: always
+  
+  product-catalog-service:
+    build:
+      context: ./services/product-catlog-service
+      dockerfile: Dockerfile
+    container_name: product-catalog-service
+    ports:
+      - 3002:3002
+    env_file:
+      - ./services/product-catlog-service/.env
+    environment:
+      - PORT=3002
+    depends_on: []
+    restart: always
+  
