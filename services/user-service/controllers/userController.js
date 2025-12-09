@@ -13,7 +13,7 @@ const registerUser = async (req, res) => {
       })
 
       await user.save();
-      res.send({"Data_inserted": user});
+      res.send({"Data_inserted": user,"token": req.token});
    }catch(err){
       console.log({"Error_register": err});
    }
