@@ -1,12 +1,12 @@
 const jwt = require("jsonwebtoken");
 
-const autheVerify = (req, res, next) => {
+const authVerify = (req, res, next) => {
     try{
        const token = req.body.token;
        jwt.verify(token,process.env.SECRET_KEY,(err, payload) =>{
           if(err){
             console.log(err);
-            return res.status(401).send("Invalid Token");
+            return res.status(401).json({message: "Invalid Token"});
           }
         
           req.payload = payload;
@@ -14,21 +14,28 @@ const autheVerify = (req, res, next) => {
         
     });
     }catch(err){
-       console.log("gky" + err)
+       console.log(err)
     }
     
 };
 
 const authSign = (req, res, next) => {
+  try{
+
     jwt.sign(req.body, process.env.SECRET_KEY, (err, token) =>{
           if(err){
             console.log(err);
-            return res.status(401).send("Try again");
+            return res.status(401).send({message: "Try again"});
           }
 
-          req.token = token;
+          req.body.token = token;
           next();
     });
+
+  }catch(err){
+    console.log(err);
+  }
+  
 };
 
-module.exports = {autheVerify, authSign};
+module.exports = {authVerify, authSign};
