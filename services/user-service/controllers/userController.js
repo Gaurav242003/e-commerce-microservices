@@ -14,7 +14,7 @@ const registerUser = async (req, res) => {
       })
 
       await user.save();
-      res.status(200),json({"Data_inserted": user,"token": req.token});
+      return res.status(200).json({"Data_inserted": user});
    }catch(err){
       console.log({"Error_register": err});
    }
@@ -25,13 +25,17 @@ const loginUser =  async (req, res) => {
       const {email, password} = req.body;
       const user = await User.findOne({email: email});
       if(!user){
-         res.status(404).json({message : "No user found"})
+         return res.status(404).json({message : "No user found"})
       }
 
-      res.status(200).json({
-         message: "logged In",
-         payload: req.body
-      })
+      if(user.password == password){
+        return res.status(200).json({
+           message: "logged In",
+           payload: req.body
+        })
+      }else{
+         return res.status(401).json({message: "Incorrect Password"})
+      }
 
    }catch(err){
       console.log({"Error_login": err});
@@ -39,7 +43,10 @@ const loginUser =  async (req, res) => {
 }
 
 const authUser = async (req, res) => {
-   res.status(200).josn(req.body);
+   return res.status(200).json({
+      "isLoggedIn": true,
+      "response": req.body
+      });
 }
 
 module.exports = {registerUser, loginUser, authUser};

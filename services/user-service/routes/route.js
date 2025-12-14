@@ -11,7 +11,7 @@ router.get('/',(req, res) => {
 
 router.post('/signup', registerUser);
 
-router.isLoggedIn('/isLoggedIn', authVerify, authUser);
+router.get('/isLoggedIn', authVerify, authUser);
 
 router.get('/login', authSign, loginUser);
 

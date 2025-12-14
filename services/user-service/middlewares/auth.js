@@ -9,7 +9,7 @@ const authVerify = (req, res, next) => {
             return res.status(401).json({message: "Invalid Token"});
           }
         
-          req.payload = payload;
+          req.body.payload = payload;
           next();
         
     });
