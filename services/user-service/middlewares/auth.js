@@ -9,7 +9,7 @@ const authVerify = (req, res, next) => {
             return res.status(401).json({message: "Invalid Token"});
           }
         
-          req.body.payload = payload;
+          req.user = payload;
           next();
         
     });
@@ -21,8 +21,10 @@ const authVerify = (req, res, next) => {
 
 const authSign = (req, res, next) => {
   try{
-
-    jwt.sign(req.body, process.env.SECRET_KEY, (err, token) =>{
+      const payload = {
+        "email": req.body.email
+      }
+    jwt.sign(payload, process.env.SECRET_KEY, (err, token) =>{
           if(err){
             console.log(err);
             return res.status(401).send({message: "Try again"});
