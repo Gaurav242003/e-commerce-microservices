@@ -1,46 +1,90 @@
-const { json } = require("express");
+
 const User = require("../models/users");
+const bcrypt = require("bcrypt");
 
 const registerUser = async (req, res) => {
-   try{
+  try {
+    const { name, email, password, phone_no } = req.body;
 
-      const {name, email, password, phone_no} = req.body
-      const user = new User({
-        name: name,
-        email: email,
-        password: password,
-        phone_no: phone_no
+    if (!name || !email || !password || !phone_no) {
+      return res.status(400).json({
+        message: "All fields are required"
+      });
+    }
 
-      })
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({
+        message: "User already exists"
+      });
+    }
 
-      await user.save();
-      return res.status(200).json({"Data_inserted": user});
-   }catch(err){
-      console.log({"Error_register": err});
-   }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      phone_no
+    });
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone_no: user.phone_no
+      }
+    });
+
+  } catch (err) {
+    console.error("registerUser error:", err.message);
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
 };
 
-const loginUser =  async (req, res) => {
-   try{
-      const {email, password} = req.body;
-      const user = await User.findOne({email: email});
-      if(!user){
-         return res.status(404).json({message : "No user found"})
-      }
 
-      if(user.password == password){
-        return res.status(200).json({
-           message: "logged In",
-           payload: req.body
-        })
-      }else{
-         return res.status(401).json({message: "Incorrect Password"})
-      }
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-   }catch(err){
-      console.log({"Error_login": err});
-   }
-}
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.SECRET_KEY,
+      { expiresIn: "1d" }
+    );
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        email: user.email
+      }
+    });
+
+  } catch (err) {
+    console.error("loginUser error:", err.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 const authUser = async (req, res) => {
    return res.status(200).json({
@@ -50,70 +94,163 @@ const authUser = async (req, res) => {
 }
 
 const myProfile = async (req, res) => {
-   try{
-      const email = req.user.email;
-      const user = await User.findOne({email: email}).select("-password");
-      if(!user){
-         return res.status(404).json({"message": "No user found"});
-      }
-
-      return res.status(200).json({"user": user});
-
-   }catch(err){
-      console.log({"myProfile" : err});
-      return res.status(500).json({
-       message: "Internal server error"
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        message: "Unauthorized access"
       });
-   }
-}
+    }
+
+    const user = await User.findById(req.user._id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user
+    });
+
+  } catch (err) {
+    console.error("myProfile error:", err.message);
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+};
+
 
 const updateProfile = async (req, res) => {
-   try{
-      const email = req.body.payload.email;
-      const {name, number} = req.body;
-      await User.updateOne({"email": email}, {
-         name: name,
-         phone_no: number
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        message: "Unauthorized"
       });
+    }
 
-      res.status(200).json({"message": "Success"});
-   }catch(err){
-      console.log({"message": err});
-   }
-}
+    const { name, number } = req.body;
 
-const addAddress = async (req, res) =>{
-   try{
-      const email = req.body.payload.email;
-      const {address} = req.body;
-      const user = await User.findOne({"email": email});
-      const u_address = user.address;
-      u_address.push(address);
+    if (!name && !number) {
+      return res.status(400).json({
+        message: "Nothing to update"
+      });
+    }
 
-      await User.updateOne({"email": email},{
-         address: u_address
-      })
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (number) updateData.phone_no = number;
 
-   }catch(err){
-      console.log({"message": err});
-   } 
-}
+    const result = await User.updateOne(
+      { _id: req.user._id },
+      { $set: updateData }
+    );
 
-const deleteAddress = async (req, res) =>{
-   try{
-      const email = req.body.payload.email;
-      const {address} = req.body;
-      const user = await User.findOne({"email": email});
-      const u_address = user.address;
-      u_address.pop();
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
 
-      await User.updateOne({"email": email},{
-         address: u_address
-      })
+    return res.status(200).json({
+      message: "Profile updated successfully"
+    });
 
-   }catch(err){
-      console.log({"message": err});
-   } 
-}
+  } catch (err) {
+    console.error("updateProfile error:", err.message);
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+};
+
+
+const addAddress = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        message: "Unauthorized"
+      });
+    }
+
+    const { address } = req.body;
+
+    if (!address) {
+      return res.status(400).json({
+        message: "Address is required"
+      });
+    }
+
+    const result = await User.updateOne(
+      { _id: req.user._id },
+      { $push: { address } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Address added successfully"
+    });
+
+  } catch (err) {
+    console.error("addAddress error:", err.message);
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+};
+
+
+const deleteAddress = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        message: "Unauthorized"
+      });
+    }
+
+    const { address } = req.body;
+
+    if (!address) {
+      return res.status(400).json({
+        message: "Address is required"
+      });
+    }
+
+    const result = await User.updateOne(
+      { _id: req.user._id },
+      { $pull: { address } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    if (result.modifiedCount === 0) {
+      return res.status(400).json({
+        message: "Address not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Address deleted successfully"
+    });
+
+  } catch (err) {
+    console.error("deleteAddress error:", err.message);
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+};
+
 
 module.exports = {registerUser, loginUser, authUser, myProfile, updateProfile, addAddress, deleteAddress};
