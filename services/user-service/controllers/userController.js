@@ -1,7 +1,7 @@
 
 const User = require("../models/users");
 const bcrypt = require("bcrypt");
-
+const jwt = require("jsonwebtoken");
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, phone_no } = req.body;
@@ -95,13 +95,13 @@ const authUser = async (req, res) => {
 
 const myProfile = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({
         message: "Unauthorized access"
       });
     }
 
-    const user = await User.findById(req.user._id).select("-password");
+    const user = await User.findById(req.user.id).select("-password");
 
     if (!user) {
       return res.status(404).json({
@@ -125,7 +125,7 @@ const myProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({
         message: "Unauthorized"
       });
@@ -144,7 +144,7 @@ const updateProfile = async (req, res) => {
     if (number) updateData.phone_no = number;
 
     const result = await User.updateOne(
-      { _id: req.user._id },
+      { _id: req.user.id },
       { $set: updateData }
     );
 
@@ -169,7 +169,7 @@ const updateProfile = async (req, res) => {
 
 const addAddress = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({
         message: "Unauthorized"
       });
@@ -184,7 +184,7 @@ const addAddress = async (req, res) => {
     }
 
     const result = await User.updateOne(
-      { _id: req.user._id },
+      { _id: req.user.id },
       { $push: { address } }
     );
 
@@ -209,7 +209,7 @@ const addAddress = async (req, res) => {
 
 const deleteAddress = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({
         message: "Unauthorized"
       });
@@ -224,7 +224,7 @@ const deleteAddress = async (req, res) => {
     }
 
     const result = await User.updateOne(
-      { _id: req.user._id },
+      { _id: req.user.id },
       { $pull: { address } }
     );
 
