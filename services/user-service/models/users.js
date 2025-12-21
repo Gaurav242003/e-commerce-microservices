@@ -7,6 +7,7 @@ const Users = new mongoose.Schema({
     phone_no: Number,
     address: [String],
     cart: [Number],
+    role: {type: String, default: "USER"}
 })
 
 const User = mongoose.model("User", Users);

@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("../database/connectiondb");
-const registerProduct = require("../controllers/productController");
+const {createProduct} = require("../controllers/productController");
+const {authorizeAdmin, authVerify} = require("../middlewares/auth");
 
-
-router.post("/registerProduct", registerProduct );
+router.post("/products", authVerify, authorizeAdmin, createProduct );
 
 router.get("/", (req, res) => {
     res.send("product catalog home");
