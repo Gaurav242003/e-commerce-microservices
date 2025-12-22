@@ -9,11 +9,13 @@ const Products = new mongoose.Schema(
     categoryId: { type: String, required: true },
     sku: { type: String, unique: true, required: true },
     brand: { type: String },
+    stock:{ type: Number, default: 0},
     status: {
       type: String,
       enum: ["DRAFT", "ACTIVE", "INACTIVE"],
       default: "DRAFT"
-    }
+    },
+    deletedAt: { type: Date }
   },
   { timestamps: true }
 );
