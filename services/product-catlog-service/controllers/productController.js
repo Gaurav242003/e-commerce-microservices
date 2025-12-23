@@ -218,9 +218,87 @@ const deleteProduct = async (req, res) => {
 };
 
 
+
+const listProducts = async (req, res) => {
+  try {
+    const {
+      categoryId,
+      brand,
+      minPrice,
+      maxPrice,
+      inStock,
+      page = 1,
+      size = 10,
+      sortBy
+    } = req.query;
+
+    // Pagination
+    const pageNum = Math.max(parseInt(page), 1);
+    const pageSize = Math.min(parseInt(size), 100);
+    const skip = (pageNum - 1) * pageSize;
+
+    // Base filter
+    const filter = { status: "ACTIVE" };
+
+    if (categoryId) filter.categoryId = categoryId;
+    if (brand) filter.brand = brand;
+
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    if (inStock === "true") {
+      filter.stock = { $gt: 0 };
+    }
+
+    // Sorting
+    let sort = { createdAt: -1 };
+    if (sortBy === "price_asc") sort = { price: 1 };
+    if (sortBy === "price_desc") sort = { price: -1 };
+    if (sortBy === "created_asc") sort = { createdAt: 1 };
+
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .select("name price currency brand stock")
+        .sort(sort)
+        .skip(skip)
+        .limit(pageSize),
+      Product.countDocuments(filter)
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      meta: {
+        page: pageNum,
+        size: pageSize,
+        totalElements: total,
+        totalPages: Math.ceil(total / pageSize)
+      },
+      data: products.map(p => ({
+        id: p._id,
+        name: p.name,
+        price: p.price,
+        currency: p.currency,
+        brand: p.brand,
+        stock: p.stock
+      }))
+    });
+  } catch (error) {
+    console.error("List Products Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+
 module.exports = {
   createProduct,
   getProductById,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  listProducts
 };
