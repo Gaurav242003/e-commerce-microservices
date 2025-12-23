@@ -53,7 +53,7 @@ const getProductById = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    // Validate MongoDB ObjectId
+   
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({
         success: false,
@@ -99,7 +99,7 @@ const updateProduct = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    // Validate ObjectId
+   
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({
         success: false,
