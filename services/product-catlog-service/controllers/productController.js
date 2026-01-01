@@ -232,12 +232,12 @@ const listProducts = async (req, res) => {
       sortBy
     } = req.query;
 
-    // Pagination
+    
     const pageNum = Math.max(parseInt(page), 1);
     const pageSize = Math.min(parseInt(size), 100);
     const skip = (pageNum - 1) * pageSize;
 
-    // Base filter
+   
     const filter = { status: "ACTIVE" };
 
     if (categoryId) filter.categoryId = categoryId;
