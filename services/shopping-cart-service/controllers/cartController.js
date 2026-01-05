@@ -190,12 +190,12 @@ const validateCart = async (req, res) => {
         issues: []
       });
     }
-
+   
     const issues = [];
 
     for (const item of cart.items) {
       const product = await getProductById(item.productId);
-
+       
       if (product.status !== "ACTIVE") {
         issues.push({
           productId: item.productId,

@@ -77,6 +77,7 @@ const getProductById = async (req, res) => {
         name: product.name,
         description: product.description,
         price: product.price,
+        stock: product.stock,
         currency: product.currency,
         category: product.category,
         status: product.status,
