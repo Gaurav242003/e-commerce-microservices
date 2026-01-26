@@ -2,6 +2,7 @@ const {v4: uuidv4} = require('uuid');
 const paymentRepo = require('../repo/payment.repo');
 const { PAYMENT_STATUS } = require('../models/payment.constants');
 const { getIdempotencyKey, acquireLock, setIdempotencyKey, releaseLock } = require('../database/connectionRedis');
+const paymentWorker = require('../workers/payment.worker');
 
 
 const createPayment = async (data) => {
@@ -13,19 +14,22 @@ const createPayment = async (data) => {
     paymentMethod,
     idempotencyKey
   } = data;
-
+  console.log(2);
   // 1. Check idempotency
   const cachedPaymentId = await getIdempotencyKey(
     `payment:idempotency:${idempotencyKey}`
   );
+  
 
   if (cachedPaymentId) {
+   
     return paymentRepo.findById(cachedPaymentId);
   }
 
   // 2. Acquire order lock
   const lockKey = `payment:lock:${orderId}`;
   const lock = await acquireLock(lockKey);
+   
 
   if (!lock) {
     throw new Error("Payment already in progress for this order");
@@ -33,13 +37,14 @@ const createPayment = async (data) => {
 
   try {
     // 3. Double-check DB idempotency
+    console.log(4);
     const existingPayment =
       await paymentRepo.findByIdempotencyKey(idempotencyKey);
 
     if (existingPayment) {
       return existingPayment;
     }
-
+    console.log(7);
     // 4. Create payment
     const payment = await paymentRepo.createPayment({
       id: uuidv4(),
@@ -51,6 +56,13 @@ const createPayment = async (data) => {
       status: PAYMENT_STATUS.INITIATED,
       idempotencyKey
     });
+    console.log(10);
+
+    // Fire-and-forget async processing
+    setImmediate(() => {
+       paymentWorker.processPayment(payment);
+   });
+   
 
     // 5. Cache idempotency key
     await setIdempotencyKey(
@@ -64,6 +76,10 @@ const createPayment = async (data) => {
     await releaseLock(lockKey);
   }
 };
+
+
+
+
 
 module.exports = {
   createPayment

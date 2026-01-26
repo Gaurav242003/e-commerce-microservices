@@ -1,7 +1,9 @@
 const paymentService = require('./createPayment');
-
+const paymentRepo = require('../repo/payment.repo');
+const { PAYMENT_STATUS } = require('../models/payment.constants');
 const createPayment = async (req, res) => {
   try {
+    console.log(1);
     const payment = await paymentService.createPayment(req.body);
 
     return res.status(201).json({
@@ -21,6 +23,26 @@ const createPayment = async (req, res) => {
   }
 };
 
+const cancelPayment = async (req, res) => {
+  const payment = await paymentRepo.findById(req.params.paymentId);
+
+  if (!payment) {
+    return res.status(404).json({ message: "Payment not found" });
+  }
+
+  if (![PAYMENT_STATUS.INITIATED, PAYMENT_STATUS.PROCESSING].includes(payment.status)) {
+    return res.status(400).json({ message: "Cannot cancel payment" });
+  }
+
+  await paymentRepo.updatePaymentStatus(
+    payment.id,
+    PAYMENT_STATUS.CANCELLED
+  );
+
+  return res.json({ success: true });
+};
+
 module.exports = {
-  createPayment
+  createPayment,
+  cancelPayment
 };
