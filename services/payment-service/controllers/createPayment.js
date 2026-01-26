@@ -14,7 +14,7 @@ const createPayment = async (data) => {
     paymentMethod,
     idempotencyKey
   } = data;
-  console.log(2);
+
   // 1. Check idempotency
   const cachedPaymentId = await getIdempotencyKey(
     `payment:idempotency:${idempotencyKey}`
@@ -37,14 +37,14 @@ const createPayment = async (data) => {
 
   try {
     // 3. Double-check DB idempotency
-    console.log(4);
+  
     const existingPayment =
       await paymentRepo.findByIdempotencyKey(idempotencyKey);
 
     if (existingPayment) {
       return existingPayment;
     }
-    console.log(7);
+
     // 4. Create payment
     const payment = await paymentRepo.createPayment({
       id: uuidv4(),
@@ -56,12 +56,12 @@ const createPayment = async (data) => {
       status: PAYMENT_STATUS.INITIATED,
       idempotencyKey
     });
-    console.log(10);
+   
 
     // Fire-and-forget async processing
     setImmediate(() => {
        paymentWorker.processPayment(payment);
-   });
+    });
    
 
     // 5. Cache idempotency key

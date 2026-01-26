@@ -3,7 +3,7 @@ const paymentRepo = require('../repo/payment.repo');
 const { PAYMENT_STATUS } = require('../models/payment.constants');
 const createPayment = async (req, res) => {
   try {
-    console.log(1);
+ 
     const payment = await paymentService.createPayment(req.body);
 
     return res.status(201).json({

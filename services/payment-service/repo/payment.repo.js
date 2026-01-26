@@ -1,7 +1,7 @@
 const pool = require('../database/connectionDB');
 
 const createPayment = async (payment) => {
-  console.log(11);
+ 
   const query = `
     INSERT INTO payments (
       id, order_id, user_id, amount, currency,
@@ -24,27 +24,27 @@ const createPayment = async (payment) => {
   
   
   const { rows } = await pool.query(query, values);
-  console.log(12);
+
   return rows[0];
 };
 
 const findByIdempotencyKey = async (key) => {
-  console.log(9);
+
   const { rows } = await pool.query(
     `SELECT * FROM payments WHERE idempotency_key = $1::text`,
     [key]
   );
-  console.log(6);
+
   return rows[0];
 };
 
 const findById = async (id) => {
-  console.log(50);
+
   const { rows } = await pool.query(
     "SELECT * FROM payments WHERE id = $1",
     [id]
   );
-  console.log(6);
+
   return rows[0];
 };
 
