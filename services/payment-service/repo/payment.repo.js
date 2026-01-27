@@ -92,7 +92,14 @@ const updatePaymentStatus = async (id, status, extraFields = {}) => {
   return rows[0];
 };
 
+const findByProviderPaymentId = async (providerPaymentId) => {
+  const {rows} = await pool.query(
+    'SELECT * FROM payments WHERE provider_payment_id = $1::text',
+    [providerPaymentId]
+  )
 
+  return rows[0];
+}
 
 
 
@@ -100,5 +107,6 @@ module.exports = {
   createPayment,
   findById,
   findByIdempotencyKey,
-  updatePaymentStatus
+  updatePaymentStatus,
+  findByProviderPaymentId
 };
