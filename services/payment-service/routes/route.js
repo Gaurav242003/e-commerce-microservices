@@ -8,7 +8,7 @@ router.get('/health', (req, res) => {
 })
 
 router.post('/payments', paymentController.createPayment);
-router.post('/payment/webhook', handleWebhook);
+router.post('/payments/webhook', handleWebhook);
 
 
 module.exports = router; 

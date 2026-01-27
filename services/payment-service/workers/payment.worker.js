@@ -14,7 +14,7 @@ const processPayment = async (payment) => {
 
     await paymentRepo.updatePaymentStatus(
       payment.id,
-     
+      PAYMENT_STATUS.PROCESSING,
       {
         provider: result.provider,
         provider_payment_id: result.providerPaymentId

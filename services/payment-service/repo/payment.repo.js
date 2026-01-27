@@ -93,8 +93,9 @@ const updatePaymentStatus = async (id, status, extraFields = {}) => {
 };
 
 const findByProviderPaymentId = async (providerPaymentId) => {
+
   const {rows} = await pool.query(
-    'SELECT * FROM payments WHERE provider_payment_id = $1::text',
+    `SELECT * FROM payments WHERE provider_payment_id = $1`,
     [providerPaymentId]
   )
 

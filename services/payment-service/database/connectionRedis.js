@@ -29,7 +29,7 @@ const setIdempotencyKey = async (key, value) => {
 };
 
 const getIdempotencyKey = async (key) => {
-  console.log(3);
+  
   return redisClient.get(key);
 };
 
