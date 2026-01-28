@@ -1,6 +1,7 @@
 // repo/order.repo.js
-const pool = require('../database/connectionDB');
+const {pool} = require('../database/connectionDB');
 const { v4: uuidv4 } = require("uuid");
+
 
 const createOrder = async ({
   id,
@@ -16,7 +17,6 @@ const createOrder = async ({
   try {
     await client.query("BEGIN");
 
-    // Idempotency check
     const existing = await client.query(
       `SELECT id FROM orders WHERE idempotency_key = $1`,
       [idempotencyKey]
@@ -28,7 +28,7 @@ const createOrder = async ({
     }
 
     await client.query(
-      `INSERT INTO orders 
+      `INSERT INTO orders
        (id, user_id, status, total_amount, currency, idempotency_key)
        VALUES ($1,$2,$3,$4,$5,$6)`,
       [id, userId, status, totalAmount, currency, idempotencyKey]
@@ -44,7 +44,7 @@ const createOrder = async ({
           id,
           item.productId,
           item.name,
-          item.price,
+          item.priceSnapshot,
           item.quantity
         ]
       );
@@ -63,13 +63,13 @@ const createOrder = async ({
     );
 
     await client.query("COMMIT");
-
     return { id, status };
+
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
-    client.release();
+    client.release(); // ✅ correct
   }
 };
 

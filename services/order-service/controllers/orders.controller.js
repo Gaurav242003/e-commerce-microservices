@@ -31,7 +31,7 @@ const placeOrder = async (req, res) => {
   }
   // 3. Calculate total
   const totalAmount = cart.data.data.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + item.priceSnapshot * item.quantity,
     0
   );
 
@@ -41,14 +41,17 @@ const placeOrder = async (req, res) => {
   const order = await orderRepo.createOrder({
     id: uuidv4(),
     userId,
-    status: ORDER_STATUS.PAYMENT_PENDING,
+    status: "ORDER_STATUS.PAYMENT_PENDING",
     totalAmount,
     currency: req.body.currency,
     items: cart.data.data.items,
     idempotencyKey
   });
 
-   return res.status(200).json({message: "testing completion"});
+   return res.status(201).json({
+    orderId: order.id,
+    status: order.status
+  });
 
   // 5. Start payment saga (async)
   await paymentService.createPayment({
