@@ -235,5 +235,23 @@ const validateCart = async (req, res) => {
 };
 
 
+const clearCartByUserId = async (req, res) =>{
+   try{
+    const userId = req.user.id;
+    await Cart.findOneAndDelete({userId});
+    return res.status(200).json({
+      success: true,
+      message: "Cart cleared"
+    });
+   }catch (err) {
+    console.error("clear Cart Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+   }
+}
 
-module.exports = {getCart, addItemToCart, updateItemQuantity, removeItemFromCart, validateCart};
+
+
+module.exports = {getCart, addItemToCart, updateItemQuantity, removeItemFromCart, validateCart, clearCartByUserId};
