@@ -19,6 +19,14 @@ const validateCart = async (req) => {
   });
 };
 
+const clearCartByUserId = async (req) => {
+  return axios.delete(`${CART_SERVICE_URL}/cart/clear`, {
+    headers: {
+      Authorization: req.headers.authorization
+    }
+  });
+}
 
 
-module.exports = { getCart , validateCart};
+
+module.exports = { getCart , validateCart, clearCartByUserId};

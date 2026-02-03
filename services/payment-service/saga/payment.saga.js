@@ -6,7 +6,7 @@ const notifyPaymentSuccess = async (payment) => {
   try {
     await retrySagaCallback(async () => {
       await axios.post(
-        `${ORDER_SERVICE_URL}/api/v1/orders/${payment.order_id}/payment-success`,
+        `${ORDER_SERVICE_URL}/orders/${payment.order_id}/payment-success`,
         { paymentId: payment.id }
       );
     });
@@ -22,7 +22,7 @@ const notifyPaymentFailed = async (payment) => {
   try {
     await retrySagaCallback(async () => {
       await axios.post(
-    `${ORDER_SERVICE_URL}/api/v1/orders/${payment.order_id}/payment-failed`,
+    `${ORDER_SERVICE_URL}/orders/${payment.order_id}/payment-failed`,
     {
       paymentId: payment.id,
       reason: payment.failure_reason

@@ -1,6 +1,7 @@
 // repo/order.repo.js
 const {pool} = require('../database/connectionDB');
 const { v4: uuidv4 } = require("uuid");
+const { ORDER_STATUS} = require('../models/order.constant');
 
 
 const createOrder = async ({
@@ -69,8 +70,29 @@ const createOrder = async ({
     await client.query("ROLLBACK");
     throw err;
   } finally {
-    client.release(); // ✅ correct
+    client.release(); 
   }
 };
 
-module.exports = { createOrder };
+const updateOrderStatus = async ( orderId, status) => {
+   const client = await pool.connect();
+   try {
+    await client.query("BEGIN");
+
+    await client.query(
+      `UPDATE orders
+       SET status = $1
+       WHERE id = $2`,
+       [status, orderId]
+    )
+   } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+
+
+module.exports = { createOrder, updateOrderStatus };
